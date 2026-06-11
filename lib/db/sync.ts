@@ -267,27 +267,25 @@ export async function scoreFinishedMatches() {
         }
       }
 
-      // 4. Run database transaction to award points and update user aggregates
-      await db.transaction(async (tx) => {
-        // Update prediction points
-        await tx
-          .update(predictions)
-          .set({
-            pointsAwarded: points,
-            updatedAt: new Date(),
-          })
-          .where(eq(predictions.id, pred.id));
+      // 4. Run database updates to award points and update user aggregates
+      // Update prediction points
+      await db
+        .update(predictions)
+        .set({
+          pointsAwarded: points,
+          updatedAt: new Date(),
+        })
+        .where(eq(predictions.id, pred.id));
 
-        // Update user stats
-        await tx
-          .update(users)
-          .set({
-            totalPoints: sql`${users.totalPoints} + ${points}`,
-            predictionsCount: sql`${users.predictionsCount} + 1`,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, pred.userId));
-      });
+      // Update user stats
+      await db
+        .update(users)
+        .set({
+          totalPoints: sql`${users.totalPoints} + ${points}`,
+          predictionsCount: sql`${users.predictionsCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, pred.userId));
 
       scoredPredictionsCount++;
     }
