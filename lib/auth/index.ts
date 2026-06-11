@@ -31,14 +31,26 @@ export async function getOrCreateUser() {
 
   // 1. Check if user already exists in Postgres
   const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
-  if (existingUser) return existingUser;
+  if (existingUser && existingUser.displayName !== "Anonymous Predictor") {
+    return existingUser;
+  }
 
   // 2. Fetch profile from Clerk API server-side
   const clerkUser = await currentUser();
-  if (!clerkUser) return null;
+  if (!clerkUser) return existingUser || null;
 
   const email = clerkUser.emailAddresses[0]?.emailAddress || `${userId}@placeholder.com`;
-  const displayName = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "Anonymous Predictor";
+  
+  // Derive a cleaner display name if first/last name are missing from Clerk profile (e.g. email/password signup)
+  let displayName = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "";
+  if (!displayName) {
+    const emailLocalPart = email.split("@")[0] || "";
+    displayName = emailLocalPart
+      .split(/[\._-]/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || "Predictor";
+  }
+
   const avatarUrl = clerkUser.imageUrl || null;
 
   // 3. Upsert user into database
