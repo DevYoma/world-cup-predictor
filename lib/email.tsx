@@ -170,7 +170,7 @@ export async function sendEmail({
     return { success: false, error: "BREVO_API_KEY is not defined" };
   }
 
-  const senderEmail = process.env.SENDER_EMAIL || "noreply@worldcuppredictor.com";
+  const senderEmail = process.env.SENDER_EMAIL || "lawrenceyoma@gmail.com";
   
   try {
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
