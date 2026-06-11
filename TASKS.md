@@ -54,11 +54,11 @@
 - [x] Move Scoring system card up on Dashboard page layout
 - [x] Wrap Predictions History in a distinct, scrollable parent container
 
-## Phase 8 - Emails (Upcoming)
+## Phase 8 - Emails ✅
 
-- [ ] Brevo integration
-- [ ] Daily reminder emails
-- [ ] Unsubscribe flow
+- [x] Brevo integration
+- [x] Daily reminder emails
+- [x] Unsubscribe flow
 
 ## Phase 9 - Design & Settings Restored ✅
 

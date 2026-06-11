@@ -3,7 +3,8 @@ import { syncTeams, syncMatches } from "../../../lib/db/sync";
 import { db } from "../../../lib/db";
 import { matches, predictions, teams, users } from "../../../lib/db/schema";
 import { getCurrentUserId, getOrCreateUser } from "../../../lib/auth";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
+import { sendReminderEmail } from "../../../lib/email";
 import { alias } from "drizzle-orm/pg-core";
 
 let isSyncingTeams = false;
@@ -138,6 +139,7 @@ const app = new Elysia({ prefix: "/api" })
       .update(users)
       .set({
         emailNotificationsEnabled,
+        unsubscribedAt: emailNotificationsEnabled ? null : new Date(),
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id))
@@ -316,6 +318,149 @@ const app = new Elysia({ prefix: "/api" })
       return { error: err.message || "Failed to sync matches" };
     } finally {
       isSyncingMatches = false;
+    }
+  })
+
+  // Send email reminders cron route
+  .post("/sync/reminders", async ({ request, set }) => {
+    const authHeader = request.headers.get("x-sync-secret");
+    const secret = process.env.SYNC_SECRET;
+
+    if (!secret || authHeader !== secret) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+
+    try {
+      const now = new Date();
+      const next24h = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      // 1. Fetch scheduled matches starting in the next 24 hours
+      const upcomingMatches = await db
+        .select({
+          id: matches.id,
+          kickoffAt: matches.kickoffAt,
+          homeTeam: {
+            name: homeTeams.name,
+            shortName: homeTeams.shortName,
+          },
+          awayTeam: {
+            name: awayTeams.name,
+            shortName: awayTeams.shortName,
+          },
+        })
+        .from(matches)
+        .leftJoin(homeTeams, eq(matches.homeTeamId, homeTeams.id))
+        .leftJoin(awayTeams, eq(matches.awayTeamId, awayTeams.id))
+        .where(
+          and(
+            eq(matches.status, "scheduled"),
+            sql`kickoff_at > ${now}`,
+            sql`kickoff_at <= ${next24h}`
+          )
+        );
+
+      if (upcomingMatches.length === 0) {
+        return { status: "success", message: "No upcoming scheduled matches in the next 24 hours.", emailsSent: 0 };
+      }
+
+      const matchIds = upcomingMatches.map((m) => m.id);
+
+      // 2. Fetch all users with email notifications enabled
+      const activeUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          displayName: users.displayName,
+        })
+        .from(users)
+        .where(eq(users.emailNotificationsEnabled, true));
+
+      if (activeUsers.length === 0) {
+        return { status: "success", message: "No users with email notifications enabled.", emailsSent: 0 };
+      }
+
+      // 3. Fetch predictions for these users on the upcoming matches
+      const existingPredictions = await db
+        .select({
+          userId: predictions.userId,
+          matchId: predictions.matchId,
+        })
+        .from(predictions)
+        .where(inArray(predictions.matchId, matchIds));
+
+      // Map predictions by user
+      const userPredictionsMap = new Map<string, Set<number>>();
+      for (const pred of existingPredictions) {
+        if (!userPredictionsMap.has(pred.userId)) {
+          userPredictionsMap.set(pred.userId, new Set());
+        }
+        userPredictionsMap.get(pred.userId)!.add(pred.matchId);
+      }
+
+      let emailsSent = 0;
+
+      // 4. Send emails to users who have unpredicted matches
+      for (const user of activeUsers) {
+        const userPreds = userPredictionsMap.get(user.id) || new Set<number>();
+        const unpredicted = upcomingMatches.filter((m) => !userPreds.has(m.id));
+
+        if (unpredicted.length > 0) {
+          // Format match lists for email
+          const matchesList = unpredicted.map((m) => ({
+            homeTeamName: m.homeTeam?.name || "TBD",
+            awayTeamName: m.awayTeam?.name || "TBD",
+            kickoffAt: m.kickoffAt,
+          }));
+
+          const mailResult = await sendReminderEmail({
+            email: user.email,
+            displayName: user.displayName || "Predictor",
+            upcomingMatches: matchesList,
+            userId: user.id,
+          });
+
+          if (mailResult.success) {
+            emailsSent++;
+          }
+        }
+      }
+
+      return { status: "success", emailsSent };
+    } catch (err: any) {
+      set.status = 500;
+      return { error: err.message || "Failed to send reminders" };
+    }
+  })
+
+  // Unsubscribe endpoint (public, called from unsubscribe UI page)
+  .post("/users/unsubscribe", async ({ body, set }) => {
+    const { userId } = body as { userId: string };
+    if (!userId) {
+      set.status = 400;
+      return { error: "Missing userId" };
+    }
+
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          emailNotificationsEnabled: false,
+          unsubscribedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (!updatedUser) {
+        set.status = 404;
+        return { error: "User not found" };
+      }
+
+      return { status: "success", email: updatedUser.email };
+    } catch (err: any) {
+      set.status = 500;
+      return { error: err.message || "Unsubscribe failed" };
     }
   });
 
