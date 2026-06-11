@@ -35,7 +35,7 @@ export default function LeaderboardPage() {
   const currentUserRank = currentUserIndex !== -1 ? currentUserIndex + 1 : null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans p-8 pb-28">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans px-2 py-6 sm:p-8 pb-28">
       <div className="max-w-4xl mx-auto">
         <Header subtitle="Global Leaderboard" />
 

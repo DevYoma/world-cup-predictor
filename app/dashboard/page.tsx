@@ -103,7 +103,7 @@ export default function DashboardPage() {
   const isAdmin = stats?.email === "lawrenceyoma@gmail.com";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans p-8 pb-24">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans px-2 py-6 sm:p-8 pb-24">
       <div className="max-w-4xl mx-auto space-y-8">
         <Header subtitle="Dashboard Overview" />
 

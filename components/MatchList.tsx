@@ -280,7 +280,7 @@ export default function MatchList() {
   const usedCount = Object.keys(localPreds).length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pb-24">
+    <div className="max-w-4xl mx-auto px-0 pb-24">
       {/* Navigation Header */}
       <Header subtitle="Match Predictions" />
 
@@ -404,7 +404,7 @@ export default function MatchList() {
                     }
 
                     return (
-                      <div key={match.id} className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-zinc-700/50 transition-all duration-300">
+                      <div key={match.id} className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-3.5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 hover:border-zinc-700/50 transition-all duration-300">
                         
                         {/* Match Time & Status Info */}
                         <div className="flex md:flex-col items-center md:items-start justify-between md:justify-center w-full md:w-auto md:min-w-[120px] gap-2 border-b md:border-b-0 border-zinc-800/50 pb-3 md:pb-0">
@@ -509,7 +509,7 @@ export default function MatchList() {
                   }
 
                   return (
-                    <div key={match.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div key={match.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 hover:border-zinc-700/50 transition-all duration-300">
                       
                       {/* Match Time & Status */}
                       <div className="text-center md:text-left min-w-[120px]">
@@ -523,39 +523,39 @@ export default function MatchList() {
                           <span className="bg-green-950/80 text-green-400 px-2 py-0.5 rounded text-[10px] uppercase font-black">Open</span>
                         </div>
                       </div>
-
+ 
                       {/* Teams Scoreboard Interface */}
-                      <div className="flex items-center gap-6 justify-center flex-1">
+                      <div className="flex items-center gap-2.5 sm:gap-6 justify-center flex-1 w-full">
                         
                         {/* Home Team */}
-                        <div className="flex items-center gap-3 w-1/3 justify-end">
-                          <span className="font-bold text-zinc-200 text-right text-sm md:text-base">
+                        <div className="flex items-center gap-1.5 sm:gap-3 w-1/3 justify-end">
+                          <span className="font-bold text-zinc-200 text-right text-xs sm:text-sm md:text-base truncate max-w-[80px] sm:max-w-none">
                             {match.homeTeam ? match.homeTeam.shortName : "TBD"}
                           </span>
                           {match.homeTeam?.flagUrl && (
-                            <img src={match.homeTeam.flagUrl} alt="flag" className="w-8 h-5 object-cover rounded border border-zinc-850" />
+                            <img src={match.homeTeam.flagUrl} alt="flag" className="w-7 h-4.5 sm:w-8 sm:h-5 object-cover rounded border border-zinc-850" />
                           )}
                         </div>
-
+ 
                         {/* Prediction / Scoreboards Visuals */}
                         {hasSavedPred ? (
                           // Saved Prediction View (Scoreboard style)
-                          <div className="flex flex-col items-center gap-1 min-w-[120px]">
-                            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Your Prediction</span>
-                            <span className="text-xl font-black bg-zinc-950/80 px-4 py-2 border border-zinc-850 rounded-xl text-amber-500 tracking-wider">
+                          <div className="flex flex-col items-center gap-1 min-w-[100px] sm:min-w-[120px]">
+                            <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-widest">Your Prediction</span>
+                            <span className="text-lg sm:text-xl font-black bg-zinc-950/80 px-3 py-1.5 sm:px-4 sm:py-2 border border-zinc-850 rounded-xl text-amber-500 tracking-wider">
                               {savedHome} : {savedAway}
                             </span>
                           </div>
                         ) : (
                           // Unpredicted Inputs
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
                             <input
                               type="text"
                               maxLength={2}
                               value={scores[match.id]?.home || ""}
                               onChange={(e) => handleScoreChange(match.id, "home", e.target.value)}
                               disabled={isLockLimitReached}
-                              className="w-12 h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
+                              className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-base sm:text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
                               placeholder="-"
                             />
                             <span className="text-zinc-650 font-bold">:</span>
@@ -565,30 +565,30 @@ export default function MatchList() {
                               value={scores[match.id]?.away || ""}
                               onChange={(e) => handleScoreChange(match.id, "away", e.target.value)}
                               disabled={isLockLimitReached}
-                              className="w-12 h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
+                              className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-base sm:text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
                               placeholder="-"
                             />
                           </div>
                         )}
-
+ 
                         {/* Away Team */}
-                        <div className="flex items-center gap-3 w-1/3 justify-start">
+                        <div className="flex items-center gap-1.5 sm:gap-3 w-1/3 justify-start">
                           {match.awayTeam?.flagUrl && (
-                            <img src={match.awayTeam.flagUrl} alt="flag" className="w-8 h-5 object-cover rounded border border-zinc-850" />
+                            <img src={match.awayTeam.flagUrl} alt="flag" className="w-7 h-4.5 sm:w-8 sm:h-5 object-cover rounded border border-zinc-850" />
                           )}
-                          <span className="font-bold text-zinc-200 text-left text-sm md:text-base">
+                          <span className="font-bold text-zinc-200 text-left text-xs sm:text-sm md:text-base truncate max-w-[80px] sm:max-w-none">
                             {match.awayTeam ? match.awayTeam.shortName : "TBD"}
                           </span>
                         </div>
-
+ 
                       </div>
-
+ 
                       {/* Actions Button */}
                       <div className="w-full md:w-auto text-center">
                         {hasSavedPred ? (
                           <button
                             onClick={() => openEditModal(match, savedHome, savedAway)}
-                            className="w-full md:w-auto h-10 px-6 bg-zinc-850 text-zinc-250 font-semibold rounded-xl hover:bg-zinc-800 border border-zinc-800 cursor-pointer transition-all hover:text-amber-500"
+                            className="w-full md:w-auto h-9 md:h-10 px-6 bg-zinc-850 text-zinc-250 font-semibold rounded-xl hover:bg-zinc-800 border border-zinc-800 cursor-pointer transition-all hover:text-amber-500"
                           >
                             Edit
                           </button>

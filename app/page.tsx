@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import Header from "@/components/Header";
+import CountdownTimer from "@/components/CountdownTimer";
 
 export default async function LandingPage() {
   const { userId } = await auth();
@@ -17,6 +18,10 @@ export default async function LandingPage() {
           Predict the World Cup. <br/>
           <span className="text-amber-500">Outsmart your friends.</span>
         </h2>
+        
+        {/* Countdown Timer */}
+        <CountdownTimer />
+
         <p className="text-zinc-400 text-lg max-w-md">
           Predict match scores, earn points for accuracy, and climb the global leaderboard for the FIFA World Cup 2026.
         </p>

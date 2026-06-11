@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const isPending = saveSettings.isPending;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans p-8">
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans px-2 py-6 sm:p-8">
       <div className="max-w-4xl mx-auto space-y-8 relative">
         <Header subtitle="Account Settings" />
 
