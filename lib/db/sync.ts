@@ -165,10 +165,12 @@ export async function syncMatches() {
         set: {
           homeTeamId: homeTeamDbId || null,
           awayTeamId: awayTeamDbId || null,
-          homeScore: match.score?.fullTime?.home !== undefined ? match.score.fullTime.home : null,
-          awayScore: match.score?.fullTime?.away !== undefined ? match.score.fullTime.away : null,
+          // Only overwrite local scores with API scores if the API actually provides them (is not null)
+          homeScore: sql`COALESCE(${match.score?.fullTime?.home}, matches.home_score)`,
+          awayScore: sql`COALESCE(${match.score?.fullTime?.away}, matches.away_score)`,
           kickoffAt: new Date(match.utcDate),
-          status: statusMapped,
+          // Protect "finished" status from being overwritten back to "scheduled" by a lagging API
+          status: sql`CASE WHEN matches.status = 'finished' THEN 'finished'::match_status ELSE ${statusMapped}::match_status END`,
           updatedAt: new Date(),
         },
       });
