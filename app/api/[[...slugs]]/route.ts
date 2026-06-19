@@ -6,6 +6,8 @@ import { getCurrentUserId, getOrCreateUser } from "../../../lib/auth";
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { sendReminderEmail } from "../../../lib/email";
 import { alias } from "drizzle-orm/pg-core";
+import { leaguesPlugin } from "../../../lib/api/leagues";
+import { statsPlugin } from "../../../lib/api/predictionCount";
 
 let isSyncingTeams = false;
 let isSyncingMatches = false;
@@ -41,6 +43,7 @@ const app = new Elysia({ prefix: "/api" })
         predictionsCount: users.predictionsCount,
       })
       .from(users)
+      .where(eq(users.showOnGlobalLeaderboard, true))
       .orderBy(
         desc(users.totalPoints),
         desc(sql`total_points::float / NULLIF(predictions_count, 0)`),
@@ -67,6 +70,7 @@ const app = new Elysia({ prefix: "/api" })
         totalPoints: users.totalPoints,
         predictionsCount: users.predictionsCount,
         emailNotificationsEnabled: users.emailNotificationsEnabled,
+        showOnGlobalLeaderboard: users.showOnGlobalLeaderboard,
       })
       .from(users)
       .where(eq(users.id, user.id));
@@ -114,6 +118,7 @@ const app = new Elysia({ prefix: "/api" })
       totalPoints: userData.totalPoints,
       predictionsCount: userData.predictionsCount,
       emailNotificationsEnabled: userData.emailNotificationsEnabled,
+      showOnGlobalLeaderboard: userData.showOnGlobalLeaderboard,
       rank,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
@@ -147,6 +152,33 @@ const app = new Elysia({ prefix: "/api" })
 
     return { status: "success", user: updatedUser };
   })
+
+  // Update global leaderboard privacy
+  .patch("/users/privacy", async ({ body, set }) => {
+    const user = await getOrCreateUser();
+    if (!user) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+
+    const { showOnGlobalLeaderboard } = body as { showOnGlobalLeaderboard: boolean };
+    if (showOnGlobalLeaderboard === undefined) {
+      set.status = 400;
+      return { error: "Missing showOnGlobalLeaderboard" };
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({ showOnGlobalLeaderboard, updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return { status: "success", showOnGlobalLeaderboard: updatedUser.showOnGlobalLeaderboard };
+  })
+
+  // ── Private Leagues (see lib/api/leagues.ts) ───────────────────────────────
+  .use(leaguesPlugin)
+  .use(statsPlugin)
 
   // Get matches list (with user predictions joined if logged in)
   .get("/matches", async () => {

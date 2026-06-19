@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
           <div className="space-y-4 mt-6 animate-in fade-in duration-300">
             
             {/* Rankings List (Horizontal Rectangles) */}
-            <div className="space-y-3">
+            <div className="space-y-3 pb-28">
               {rankings.map((player, idx) => {
                 const rank = idx + 1;
                 const isCurrentUser = player.id === currentUserId;

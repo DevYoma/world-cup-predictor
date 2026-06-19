@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, serial, index, uniqueIndex, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, serial, index, uniqueIndex, pgEnum, uuid, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // 1. Enums
@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   totalPoints: integer("total_points").default(0).notNull(),
   predictionsCount: integer("predictions_count").default(0).notNull(),
   emailNotificationsEnabled: boolean("email_notifications_enabled").default(true).notNull(),
+  showOnGlobalLeaderboard: boolean("show_on_global_leaderboard").default(true).notNull(),
   unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -65,9 +66,51 @@ export const predictions = pgTable("predictions", {
   uniqueIndex("predictions_user_id_match_id_unique").on(table.userId, table.matchId),
 ]);
 
+// 6. Leagues Table
+export const leagues = pgTable("leagues", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  code: varchar("code", { length: 8 }).unique().notNull(), // e.g. "WC-A7B8"
+  creatorId: text("creator_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// 7. League Members Table
+export const leagueMembers = pgTable("league_members", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leagueId: uuid("league_id").references(() => leagues.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  // Prevent a user from joining the same league twice
+  uniqueIndex("league_members_league_id_user_id_unique").on(table.leagueId, table.userId),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   predictions: many(predictions),
+  leagueMembers: many(leagueMembers),
+  createdLeagues: many(leagues, { relationName: "createdLeagues" }),
+}));
+
+export const leaguesRelations = relations(leagues, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [leagues.creatorId],
+    references: [users.id],
+    relationName: "createdLeagues",
+  }),
+  members: many(leagueMembers),
+}));
+
+export const leagueMembersRelations = relations(leagueMembers, ({ one }) => ({
+  league: one(leagues, {
+    fields: [leagueMembers.leagueId],
+    references: [leagues.id],
+  }),
+  user: one(users, {
+    fields: [leagueMembers.userId],
+    references: [users.id],
+  }),
 }));
 
 export const teamsRelations = relations(teams, ({ many }) => ({
