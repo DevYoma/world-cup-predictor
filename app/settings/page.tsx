@@ -6,12 +6,14 @@ import Header from "@/components/Header";
 
 interface UserStats {
   emailNotificationsEnabled: boolean;
+  showOnGlobalLeaderboard: boolean;
 }
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [toast, setToast] = useState<{ text: string; isError: boolean } | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [showOnLeaderboard, setShowOnLeaderboard] = useState(true);
 
   // 1. Fetch user settings (from the stats endpoint)
   const { data: stats, isLoading } = useQuery<UserStats>({
@@ -27,6 +29,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (stats) {
       setEmailNotifications(stats.emailNotificationsEnabled);
+      setShowOnLeaderboard(stats.showOnGlobalLeaderboard);
     }
   }, [stats]);
 
@@ -58,12 +61,41 @@ export default function SettingsPage() {
     },
   });
 
-  const handleSaveSettings = () => {
-    saveSettings.mutate(emailNotifications);
+  const handleSaveSettings = async () => {
+    const promises: Promise<any>[] = [];
+
+    if (stats && emailNotifications !== stats.emailNotificationsEnabled) {
+      promises.push(
+        saveSettings.mutateAsync(emailNotifications)
+      );
+    }
+
+    if (stats && showOnLeaderboard !== stats.showOnGlobalLeaderboard) {
+      promises.push(
+        fetch("/api/users/privacy", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ showOnGlobalLeaderboard: showOnLeaderboard }),
+        }).then(async (res) => {
+          if (!res.ok) throw new Error("Failed to save privacy setting");
+        })
+      );
+    }
+
+    try {
+      await Promise.all(promises);
+      setToast({ text: "Settings saved successfully!", isError: false });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
+    } catch {
+      setToast({ text: "Failed to save some settings.", isError: true });
+    }
   };
 
   // Check if settings have been modified compared to DB
-  const isDirty = stats !== undefined && emailNotifications !== stats.emailNotificationsEnabled;
+  const isDirty = stats !== undefined && (
+    emailNotifications !== stats.emailNotificationsEnabled ||
+    showOnLeaderboard !== stats.showOnGlobalLeaderboard
+  );
   const isPending = saveSettings.isPending;
 
   return (
@@ -119,6 +151,25 @@ export default function SettingsPage() {
                 </label>
                 <p className="text-zinc-500 text-xs mt-1.5 leading-relaxed">
                   Receive a daily reminder notification email if you have upcoming matches that you haven't predicted yet. Toggling this off will unsubscribe you from reminder alerts.
+                </p>
+              </div>
+            </div>
+
+            {/* Privacy Toggle */}
+            <div className="flex items-start gap-4 py-2 border-t border-zinc-800 pt-5">
+              <input
+                type="checkbox"
+                id="leaderboard-checkbox"
+                checked={showOnLeaderboard}
+                onChange={(e) => setShowOnLeaderboard(e.target.checked)}
+                className="mt-1 h-5 w-5 bg-zinc-950 border border-zinc-800 rounded focus:ring-amber-500 text-amber-500 accent-amber-500 transition-colors cursor-pointer"
+              />
+              <div className="flex-1">
+                <label htmlFor="leaderboard-checkbox" className="font-extrabold text-sm text-zinc-200 cursor-pointer block">
+                  Show me on the Global Leaderboard
+                </label>
+                <p className="text-zinc-500 text-xs mt-1.5 leading-relaxed">
+                  When enabled, your name and points appear on the public leaderboard. When disabled, you're hidden globally but still visible in your private leagues.
                 </p>
               </div>
             </div>

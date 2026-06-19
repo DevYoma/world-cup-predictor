@@ -42,6 +42,7 @@ export default function Header({ subtitle }: HeaderProps) {
           {isLoaded && isSignedIn ? (
             <>
               <Link href="/dashboard" className={getLinkClass("/dashboard")}>Dashboard</Link>
+              <Link href="/leagues" className={getLinkClass("/leagues")}>Leagues</Link>
               <Link href="/settings" className={getLinkClass("/settings")}>Settings</Link>
               <div className="pl-2 border-l border-zinc-800">
                 <UserButton />
@@ -126,6 +127,13 @@ export default function Header({ subtitle }: HeaderProps) {
                 className="block px-3 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-amber-500 transition-colors"
               >
                 Dashboard
+              </Link>
+              <Link 
+                href="/leagues" 
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-amber-500 transition-colors"
+              >
+                Leagues
               </Link>
               <Link 
                 href="/settings" 

@@ -8,6 +8,13 @@
       "when": 1781102000587,
       "tag": "0000_blue_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781869520072,
+      "tag": "0001_private_leagues",
+      "breakpoints": true
     }
   ]
 }

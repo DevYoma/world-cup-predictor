@@ -375,6 +375,7 @@ export default function MatchList() {
                   const isThisPredicted = localPreds[match.id] !== undefined;
                   const isDemoMatch = nextThreeMatchIds.includes(match.id) || isThisPredicted;
                   const isLockLimitReached = !isSignedIn && !isDemoMatch;
+                  const isTBD = !match.homeTeam || !match.awayTeam;
 
                   if (isLocked) {
                     const actualHome = match.homeScore;
@@ -554,7 +555,7 @@ export default function MatchList() {
                               maxLength={2}
                               value={scores[match.id]?.home || ""}
                               onChange={(e) => handleScoreChange(match.id, "home", e.target.value)}
-                              disabled={isLockLimitReached}
+                              disabled={isLockLimitReached || isTBD}
                               className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-base sm:text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
                               placeholder="-"
                             />
@@ -564,7 +565,7 @@ export default function MatchList() {
                               maxLength={2}
                               value={scores[match.id]?.away || ""}
                               onChange={(e) => handleScoreChange(match.id, "away", e.target.value)}
-                              disabled={isLockLimitReached}
+                              disabled={isLockLimitReached || isTBD}
                               className="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-950 border border-zinc-800 text-center rounded-xl text-base sm:text-lg font-bold focus:outline-none focus:border-amber-500 disabled:opacity-30 transition-all"
                               placeholder="-"
                             />
@@ -585,7 +586,11 @@ export default function MatchList() {
  
                       {/* Actions Button */}
                       <div className="w-full md:w-auto text-center">
-                        {hasSavedPred ? (
+                        {isTBD ? (
+                          <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider bg-zinc-950/30 border border-zinc-850/40 px-4 py-2 rounded-xl block md:inline-block">
+                            Yet to be decided
+                          </span>
+                        ) : hasSavedPred ? (
                           <button
                             onClick={() => openEditModal(match, savedHome, savedAway)}
                             className="w-full md:w-auto h-9 md:h-10 px-6 bg-zinc-850 text-zinc-250 font-semibold rounded-xl hover:bg-zinc-800 border border-zinc-800 cursor-pointer transition-all hover:text-amber-500"
