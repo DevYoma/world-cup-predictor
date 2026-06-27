@@ -1,6 +1,8 @@
 import { Elysia } from "elysia";
 import { syncTeams, syncMatches } from "../../../lib/db/sync";
 import { db } from "../../../lib/db";
+
+export const dynamic = "force-dynamic";
 import { matches, predictions, teams, users } from "../../../lib/db/schema";
 import { getCurrentUserId, getOrCreateUser } from "../../../lib/auth";
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
