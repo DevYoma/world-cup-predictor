@@ -27,6 +27,7 @@ const app = new Elysia({ prefix: "/api" })
       headers: {
         "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY || "",
       },
+      cache: "no-store",
     });
     return await res.json();
   })
