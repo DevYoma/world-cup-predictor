@@ -164,8 +164,8 @@ export async function syncMatches() {
       .onConflictDoUpdate({
         target: matches.apiMatchId,
         set: {
-          homeTeamId: homeTeamDbId || null,
-          awayTeamId: awayTeamDbId || null,
+          homeTeamId: sql`COALESCE(${homeTeamDbId}, matches.home_team_id)`,
+          awayTeamId: sql`COALESCE(${awayTeamDbId}, matches.away_team_id)`,
           // Only overwrite local scores with API scores if the API actually provides them (is not null)
           homeScore: sql`COALESCE(${match.score?.fullTime?.home}, matches.home_score)`,
           awayScore: sql`COALESCE(${match.score?.fullTime?.away}, matches.away_score)`,
