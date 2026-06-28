@@ -56,6 +56,7 @@ async function fetchFromAPI<T>(path: string): Promise<T> {
     headers: {
       "X-Auth-Token": API_KEY || "",
     },
+    cache: "no-store",
   });
 
   if (!res.ok) {
