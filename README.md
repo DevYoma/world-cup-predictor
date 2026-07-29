@@ -12,21 +12,19 @@ A high-performance, real-time football prediction platform built for global tour
 
 ---
 
-## 🔗 Demo
-*   **Live Demo**: [world-cup-predictor-taupe.vercel.app](https://world-cup-predictor-taupe.vercel.app) *(Deploy link placeholder)*
+### 🔗 Demo
+*   **Live Demo**: [world-cup-predictor-taupe.vercel.app](https://world-cup-predictor-taupe.vercel.app)
 *   **Source Code**: [github.com/DevYoma/world-cup-predictor](https://github.com/DevYoma/world-cup-predictor)
-
-*(Insert Demo Video / Walkthrough GIF Here)*
 
 ---
 
 ## 📖 Overview
 
 ### The Problem
-During massive international sports tournaments like the FIFA World Cup, fans seek to engage beyond just watching. Traditional bracket challenges are often static, tedious to manage, and suffer from poor mobile responsiveness. Moreover, building real-time prediction apps presents structural challenges at scale: handling high-concurrency traffic around kickoffs, managing synchronization across live external score feeds, dynamically resolving bracket progressions (e.g. knockout stages where opponents are originally "To Be Decided"), and recalculating points accurately across thousands of users simultaneously.
+I wanted to build something my friends and I could play and compete on that would be related to the World Cup. I wanted to build something that would bring football lovers together.
 
 ### The Solution
-**World Cup Predictor** is a production-grade, full-stack platform built specifically to address these challenges. It allows football fans to easily register, submit predictions for upcoming matches, track live scores, and compete in both global and private leaderboards. The platform is optimized for sub-100ms API responses, clean type-safety, and seamless updates, ensuring a reliable developer and user experience throughout the high-intensity tournament lifecycle.
+**WorldcupPredictor** is a full-stack application built with Elysia mounted in Next.js, with a PostgreSQL instance on Neon, Clerk for authentication, and Drizzle ORM.
 
 ---
 
@@ -57,34 +55,18 @@ During massive international sports tournaments like the FIFA World Cup, fans se
 
 ---
 
-## 📐 Project Architecture
+## 📐 Project Flow
 
-The application is structured to isolate business operations from the client visual layer. The Elysia.js API router handles all data mutations, which guarantees that the client application never interacts with external data feeds or the database directly.
+The application flow is straightforward:
+1. We get the match data from an external API and store them in the database.
+2. The user signs up, retrieves the match data from the database, and submits predictions.
+3. They see their score after matches finish and move up the rankings/leaderboard.
 
-### Data & Request Flow
-```mermaid
-graph TD
-    Client[Next.js App / React Client] -->|Fetch Requests /api/*| Elysia[Elysia.js API Route Handler]
-    Elysia -->|Drizzle ORM Queries| Neon[Neon Serverless PostgreSQL]
-    Clerk[Clerk Auth Services] <-->|Authentication JWT| Client
-    Clerk -->|Webhook Sync| Elysia
-    Elysia -->|Trigger Emails| Brevo[Brevo SMTP / REST API]
-    API[Football-Data.org API] -->|Sync Cron Job /api/sync/*| Elysia
-```
-
-### Key Request Flows
-1.  **Auth Sync**: On user sign-in/up, Clerk verifies credentials and fires a webhook. Elysia handles the webhook to insert the user profile into the Postgres `users` table.
-2.  **Match Prediction**: The user updates a score input. A TanStack Query mutation calls `/api/predictions`. Elysia verifies that the match kickoff date has not passed and updates the prediction.
-3.  **Automatic Scoring**: A cron job triggers the `/api/sync/matches` endpoint. Elysia fetches updated match data from Football-Data.org, updates local scores, checks for finished matches, and allocates points:
-    *   **5 points**: Exact score match.
-    *   **2 points**: Correct outcome (Win/Loss/Draw) but incorrect score.
-    *   **0 points**: Incorrect outcome.
-
----
+--- 
 
 ## 🗄️ Database Design
 
-The database schema is modeled to represent relational connections with performance indexes on query filters (like match status and kickoff times).
+Designing the data model was the most important part of building this application.
 
 ### Entity Relationship Diagram
 ```mermaid
@@ -213,11 +195,6 @@ This project is evolving into a complete football prediction platform focused on
 *   Weekly match predictions and analytics.
 *   Detailed team pages, player statistics, and match statistics.
 *   **Real-time Score Synchronization**: Implementing WebSockets to push immediate scoreboard updates upon match completion, bypassing latency limitations of the freemium API tier.
-
----
-
-## 🤝 Contributing
-Contributions are welcome! Please open an issue or submit a pull request with details on your proposed changes.
 
 ---
 
